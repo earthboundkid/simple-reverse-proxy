@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 
 	"net/http"
@@ -43,7 +44,7 @@ func main() {
 
 	LoggingMiddleware := func(s http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Printf("Proxying %s to %s\n", r.URL.Path, url)
+			log.Printf("Proxying %s to %s\n", r.URL.Path, url)
 			s.ServeHTTP(w, r)
 		})
 	}
