@@ -41,7 +41,7 @@ func main() {
 
 	fmt.Printf("Starting reverse proxy to %s...\n\n", url)
 
-	if err := http.ListenAndServe(":80", proxy); err != nil {
+	if err := http.ListenAndServe("127.0.0.1:80", proxy); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n\n", err)
 		os.Exit(1)
 	}
