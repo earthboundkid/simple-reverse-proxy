@@ -39,7 +39,7 @@ func main() {
 
 	proxy := LoggingMiddleware(httputil.NewSingleHostReverseProxy(url))
 
-	fmt.Printf("Starting reverse proxy to %s://%s:%d...\n\n", scheme, host, port)
+	fmt.Printf("Starting reverse proxy to %s...\n\n", url)
 
 	if err := http.ListenAndServe(":80", proxy); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n\n", err)
