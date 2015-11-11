@@ -11,15 +11,19 @@ import (
 )
 
 var (
-	scheme string
-	host   string
-	port   int
+	scheme        string
+	host          string
+	port          int
+	listeningPort int
+	allowExternal bool
 )
 
 func init() {
 	flag.IntVar(&port, "port", 8000, "Port to reverse proxy")
 	flag.StringVar(&host, "host", "localhost", "Host to reverse proxy")
 	flag.StringVar(&scheme, "scheme", "http", "Scheme to reverse proxy")
+	flag.IntVar(&listeningPort, "listening-port", 80, "Port to listen on")
+	flag.BoolVar(&allowExternal, "allow-external-connections", false, "Allow other computers to connect to your HTTP server")
 }
 
 func main() {
@@ -28,6 +32,13 @@ func main() {
 	url := &url.URL{
 		Scheme: scheme,
 		Host:   fmt.Sprintf("%s:%d", host, port),
+	}
+
+	var listenOn string
+	if allowExternal {
+		listenOn = fmt.Sprintf(":%d", listeningPort)
+	} else {
+		listenOn = fmt.Sprintf("[::1]:%d", listeningPort)
 	}
 
 	LoggingMiddleware := func(s http.Handler) http.Handler {
@@ -39,9 +50,9 @@ func main() {
 
 	proxy := LoggingMiddleware(httputil.NewSingleHostReverseProxy(url))
 
-	fmt.Printf("Starting reverse proxy to %s...\n\n", url)
+	fmt.Printf("Starting reverse proxy from %s to %s...\n\n", listenOn, url)
 
-	if err := http.ListenAndServe("127.0.0.1:80", proxy); err != nil {
+	if err := http.ListenAndServe(listenOn, proxy); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n\n", err)
 		os.Exit(1)
 	}
