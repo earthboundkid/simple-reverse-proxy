@@ -55,7 +55,6 @@ func main() {
 
 	proxy := LoggingMiddleware(httputil.NewSingleHostReverseProxy(Url))
 
-
 	fmt.Printf("Started simple reverse proxy from %s to %s...\n\n", ListenOn, Url)
 
 	if err := http.ListenAndServe(ListenOn, proxy); err != nil {
