@@ -48,7 +48,7 @@ func main() {
 
 	LoggingMiddleware := func(s http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log.Printf("Proxying %s to %s\n", r.URL.Path, Url)
+			log.Printf("Reverse proxying %s ...\n", r.URL.Path)
 			s.ServeHTTP(w, r)
 		})
 	}
@@ -56,7 +56,7 @@ func main() {
 	proxy := LoggingMiddleware(httputil.NewSingleHostReverseProxy(Url))
 
 
-	fmt.Printf("Starting reverse proxy from %s to %s...\n\n", ListenOn, Url)
+	fmt.Printf("Started simple reverse proxy from %s to %s...\n\n", ListenOn, Url)
 
 	if err := http.ListenAndServe(ListenOn, proxy); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n\n", err)
