@@ -39,7 +39,7 @@ func main() {
 	if allowExternal {
 		listenOn = fmt.Sprintf(":%d", listeningPort)
 	} else {
-		listenOn = fmt.Sprintf("[::1]:%d", listeningPort)
+		listenOn = fmt.Sprintf("127.0.0.1:%d", listeningPort)
 	}
 
 	LoggingMiddleware := func(s http.Handler) http.Handler {
