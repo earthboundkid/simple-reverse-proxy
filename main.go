@@ -17,14 +17,11 @@ var (
 )
 
 func init() {
-	// Set flags
-	var (
-		scheme        = flag.String("scheme", "http", "Scheme to reverse proxy")
-		host          = flag.String("host", "localhost", "Host to reverse proxy")
-		port          = flag.Int("port", 8000, "Port to reverse proxy")
-		listeningPort = flag.Int("listening-port", 80, "Port to listen on")
-		allowExternal = flag.Bool("allow-external-connections", false, "Allow other computers to connect to your HTTP server")
-	)
+	scheme := flag.String("scheme", "http", "Scheme to reverse proxy")
+	host := flag.String("host", "localhost", "Host to reverse proxy")
+	port := flag.Int("port", 8000, "Port to reverse proxy")
+	listeningPort := flag.Int("listening-port", 80, "Port to listen on")
+	allowExternal := flag.Bool("allow-external-connections", false, "Allow other computers to connect to your HTTP server")
 	flag.Parse()
 
 	Url = url.URL{
