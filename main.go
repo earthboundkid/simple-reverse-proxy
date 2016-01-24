@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"os"
 
 	"net/http"
@@ -12,21 +13,35 @@ import (
 )
 
 var (
-	Url      url.URL
+	Url      *url.URL
 	ListenOn string
+	FileName string
 )
 
 func init() {
-	scheme := flag.String("scheme", "http", "Scheme to reverse proxy")
-	host := flag.String("host", "localhost", "Host to reverse proxy")
-	port := flag.Int("port", 8000, "Port to reverse proxy")
+	proxyUrl := flag.String("proxy", "http://localhost:8000/", "URL to proxy requests to")
 	listeningPort := flag.Int("listening-port", 80, "Port to listen on")
 	allowExternal := flag.Bool("allow-external-connections", false, "Allow other computers to connect to your HTTP server")
 	flag.Parse()
 
-	Url = url.URL{
-		Scheme: *scheme,
-		Host:   fmt.Sprintf("%s:%d", *host, *port),
+	var err error
+	Url, err = url.Parse(*proxyUrl)
+	if err != nil {
+		fmt.Fprint(os.Stderr, err)
+		flag.Usage()
+		os.Exit(2)
+	}
+
+	if Url.Scheme == "unix" {
+		FileName = Url.Host
+		// Handle URLs written like unix:whatever instead of unix://whatever
+		if FileName == "" {
+			FileName = Url.Opaque
+		}
+		Url = &url.URL{
+			Scheme: "http",
+			Host:   "127.0.0.1",
+		}
 	}
 
 	if *allowExternal {
@@ -44,12 +59,25 @@ func LoggingMiddleware(s http.Handler) http.Handler {
 	})
 }
 
+func SocketDialer(network, addr string) (conn net.Conn, err error) {
+	return net.Dial("unix", FileName)
+}
+
 func main() {
-	fmt.Printf("Started simple reverse proxy from %s to %s...\n\n", ListenOn, &Url)
+	proxied := Url.String()
+	rp := httputil.NewSingleHostReverseProxy(Url)
 
-	proxy := LoggingMiddleware(httputil.NewSingleHostReverseProxy(&Url))
+	// Handle unix socket connections
+	if FileName != "" {
+		proxied = FileName
+		rp.Transport = &http.Transport{
+			Dial: SocketDialer,
+		}
+	}
 
-	if err := http.ListenAndServe(ListenOn, proxy); err != nil {
+	fmt.Printf("Started simple reverse proxy from %s to %s...\n\n", ListenOn, proxied)
+
+	if err := http.ListenAndServe(ListenOn, LoggingMiddleware(rp)); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n\n", err)
 		os.Exit(1)
 	}
